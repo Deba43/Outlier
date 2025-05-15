@@ -74,7 +74,7 @@ public class CSVDataLoader {
         try {
             CSVDataLoader loader = new CSVDataLoader();
             SimpleDataStore dataStore = loader.loadCSVData(
-                    "D:\\High-Contrast-Subspace\\src\\main\\java\\com\\debadatta\\High_Contrast_Subspace\\controller\\diabetes.csv");
+                    "D:\\High-Contrast-Subspace\\src\\main\\java\\com\\debadatta\\High_Contrast_Subspace\\controller\\ann-test.csv");
 
             // Iterate and print the vectors
             dataStore.getData().forEach(System.out::println);

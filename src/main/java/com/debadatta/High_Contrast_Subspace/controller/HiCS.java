@@ -11,7 +11,7 @@ import weka.core.converters.CSVLoader;
 
 public class HiCS {
 
-    private static final int NUM_SUBSPACES = 100; // Number of subspaces to generate
+    private static final int NUM_SUBSPACES = 20; // Number of subspaces to generate
     private static final int SUBSPACE_DIM = 5; // Dimensionality of each subspace
     private static final int NUM_ITERATIONS = 50; // Number of Monte Carlo iterations
     private static final double ALPHA = 0.1; // Size of the test statistic
@@ -20,7 +20,7 @@ public class HiCS {
         // Load MNIST dataset
         CSVLoader loader = new CSVLoader();
         loader.setSource(new FileInputStream(
-                "D:\\High-Contrast-Subspace\\src\\main\\java\\com\\debadatta\\High_Contrast_Subspace\\controller\\diabetes.csv"));
+                "D:\\High-Contrast-Subspace\\src\\main\\java\\com\\debadatta\\High_Contrast_Subspace\\controller\\annthyroid_cleaned.csv"));
         Instances data = loader.getDataSet();
         data.setClassIndex(data.numAttributes() - 1);
 
@@ -46,6 +46,56 @@ public class HiCS {
 
         // Print top 10 outliers
         printTopOutliers(outlierScores, 10);
+
+        // Compute evaluation metrics
+        List<Boolean> actualLabels = new ArrayList<>();
+        for (int i = 0; i < filteredData.numInstances(); i++) {
+            actualLabels.add(filteredData.instance(i).classValue() == 6);
+        }
+
+        int totalPositives = 700; // Number of class 6 instances in filteredData
+        int totalNegatives = filteredData.numInstances() - totalPositives;
+        int K = Math.min(totalPositives, filteredData.numInstances()); // Ensure K is within bounds
+
+        // Sort instances by outlier scores in descending order
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < outlierScores.size(); i++) {
+            indices.add(i);
+        }
+        indices.sort((i1, i2) -> Double.compare(outlierScores.get(i2), outlierScores.get(i1)));
+
+        // Get top K predicted outliers
+        List<Integer> predictedOutliers = indices.subList(0, K);
+
+        // Calculate TP, FP, FN, TN
+        int TP = 0, FP = 0;
+        for (int idx : predictedOutliers) {
+            if (actualLabels.get(idx)) {
+                TP++;
+            } else {
+                FP++;
+            }
+        }
+        int FN = totalPositives - TP;
+        int TN = totalNegatives - FP;
+
+        // Compute metrics
+        double accuracy = (double) (TP + TN) / (TP + TN + FP + FN);
+        double precision = (TP + FP == 0) ? 0 : (double) TP / (TP + FP);
+        double recall = (double) TP / totalPositives;
+        double falsePositiveRate = (TN + FP == 0) ? 0 : (double) FP / (FP + TN);
+        double falseNegativeRate = (FN + TP == 0) ? 0 : (double) FN / (FN + TP);
+
+        // Print metrics
+        System.out.println("\nEvaluation Metrics:");
+        System.out.println("Confusion Matrix:");
+        System.out.println("TP: " + TP + " | FP: " + FP);
+        System.out.println("FN: " + FN + " | TN: " + TN);
+        System.out.println("Accuracy: " + accuracy);
+        System.out.println("Precision: " + precision);
+        System.out.println("Recall: " + recall);
+        System.out.println("False Positive Rate: " + falsePositiveRate);
+        System.out.println("False Negative Rate: " + falseNegativeRate);
     }
 
     private static Instances filterData(Instances data) {
